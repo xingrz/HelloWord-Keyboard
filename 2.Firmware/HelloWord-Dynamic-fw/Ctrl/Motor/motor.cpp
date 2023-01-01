@@ -7,13 +7,6 @@ bool Motor::Init(float _zeroElectricOffset, EncoderBase::Direction _encoderDir)
 {
     if (encoder) encoder->Init();
     if (driver) driver->Init();
-    if (currentSense) currentSense->Init();
-
-    if (!currentSense && ASSERT(phaseResistance))
-    {
-        float limit = config.currentLimit * phaseResistance;
-        config.voltageLimit = limit < config.voltageLimit ? limit : config.voltageLimit;
-    }
 
     if (config.voltageLimit > driver->voltagePowerSupply)
         config.voltageLimit = driver->voltagePowerSupply;
@@ -21,18 +14,7 @@ bool Motor::Init(float _zeroElectricOffset, EncoderBase::Direction _encoderDir)
     if (config.voltageUsedForSensorAlign > config.voltageLimit)
         config.voltageUsedForSensorAlign = config.voltageLimit;
 
-    if (currentSense)
-    {
-        config.pidCurrentQ.limit = config.voltageLimit;
-        config.pidCurrentD.limit = config.voltageLimit;
-        config.pidVelocity.limit = config.currentLimit;
-    } else if (ASSERT(phaseResistance))
-    {
-        config.pidVelocity.limit = config.currentLimit;
-    } else
-    {
-        config.pidVelocity.limit = config.voltageLimit;
-    }
+    config.pidVelocity.limit = config.voltageLimit;
     config.pidAngle.limit = config.velocityLimit;
 
     return InitFOC(_zeroElectricOffset, _encoderDir);
@@ -42,12 +24,6 @@ bool Motor::Init(float _zeroElectricOffset, EncoderBase::Direction _encoderDir)
 void Motor::AttachEncoder(EncoderBase* _encoder)
 {
     encoder = _encoder;
-}
-
-
-void Motor::AttachCurrentSense(CurrentSenseBase* _currentSense)
-{
-    currentSense = _currentSense;
 }
 
 
@@ -214,7 +190,7 @@ void Motor::CloseLoopControlTick()
     switch (config.controlMode)
     {
         case ControlMode_t::TORQUE:
-            voltage.q = ASSERT(phaseResistance) ? target * phaseResistance : target;
+            voltage.q = target;
             voltage.d = 0;
             setPointCurrent = voltage.q;
             break;
@@ -253,7 +229,7 @@ void Motor::FocOutputTick()
 
     electricalAngle = GetElectricalAngle();
 
-    voltage.q = ASSERT(phaseResistance) ? setPointCurrent * phaseResistance : setPointCurrent;
+    voltage.q = setPointCurrent;
     voltage.d = 0;
 
     SetPhaseVoltage(voltage.q, voltage.d, electricalAngle);
@@ -270,7 +246,7 @@ float Motor::VelocityOpenLoopTick(float _target)
     estimateAngle = Normalize(estimateAngle + _target * deltaT);
     estimateVelocity = _target;
 
-    float voltageQ = ASSERT(phaseResistance) ? config.currentLimit * phaseResistance : config.voltageLimit;
+    float voltageQ = config.voltageLimit;
     SetPhaseVoltage(voltageQ, 0, Normalize(estimateAngle) * (float) polePairs);
 
     openLoopTimestamp = t;
@@ -296,7 +272,7 @@ float Motor::AngleOpenLoopTick(float _target)
         estimateVelocity = 0;
     }
 
-    float voltageQ = ASSERT(phaseResistance) ? config.currentLimit * phaseResistance : config.voltageLimit;
+    float voltageQ = config.voltageLimit;
     SetPhaseVoltage(voltageQ, 0, Normalize(estimateAngle) * (float) polePairs);
 
     openLoopTimestamp = t;
@@ -371,10 +347,6 @@ void Motor::SetPhaseVoltage(float _voltageQ, float _voltageD, float _angleElectr
     voltageB = tB * driver->voltagePowerSupply;
     voltageC = tC * driver->voltagePowerSupply;
 
-    currentSense->pwmDutyA = tA;
-    currentSense->pwmDutyB = tB;
-    currentSense->pwmDutyC = tC;
-
     driver->SetVoltage(voltageA, voltageB, voltageC);
 }
 
@@ -382,13 +354,6 @@ void Motor::SetPhaseVoltage(float _voltageQ, float _voltageD, float _angleElectr
 void Motor::SetTorqueLimit(float _val)
 {
     config.voltageLimit = _val;
-    config.currentLimit = _val;
-
-    if (!currentSense && ASSERT(phaseResistance))
-    {
-        float limit = config.currentLimit * phaseResistance;
-        config.voltageLimit = limit < config.voltageLimit ? limit : config.voltageLimit;
-    }
 
     if (config.voltageLimit > driver->voltagePowerSupply)
         config.voltageLimit = driver->voltagePowerSupply;
@@ -396,18 +361,7 @@ void Motor::SetTorqueLimit(float _val)
     if (config.voltageUsedForSensorAlign > config.voltageLimit)
         config.voltageUsedForSensorAlign = config.voltageLimit;
 
-    if (currentSense)
-    {
-        config.pidCurrentQ.limit = config.voltageLimit;
-        config.pidCurrentD.limit = config.voltageLimit;
-        config.pidVelocity.limit = config.currentLimit;
-    } else if (ASSERT(phaseResistance))
-    {
-        config.pidVelocity.limit = config.currentLimit;
-    } else
-    {
-        config.pidVelocity.limit = config.voltageLimit;
-    }
+    config.pidVelocity.limit = config.voltageLimit;
     config.pidAngle.limit = config.velocityLimit;
 }
 

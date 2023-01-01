@@ -3,7 +3,6 @@
 
 #include "Ctrl/Driver/driver_base.h"
 #include "Ctrl/Sensor/Encoder/encoder_base.h"
-#include "Ctrl/Sensor/CurrentSense/current_sense_base.h"
 #include "lowpass_filter.h"
 #include "math_utils.h"
 #include "pid.h"
@@ -11,21 +10,16 @@
 class Motor
 {
 public:
-    explicit Motor(int _polePairs, float _phaseResistance = NOT_SET) :
-        polePairs(_polePairs), phaseResistance(_phaseResistance)
+    explicit Motor(int _polePairs) :
+        polePairs(_polePairs)
     {
         config.controlMode = ANGLE;
         config.voltageUsedForSensorAlign =1.0f;
         config.voltageLimit = 12.0f;
-        config.currentLimit = 0.2f;
         config.velocityLimit = 20.0f;
 
-        config.lpfCurrentQ = LowPassFilter{0.005f};
-        config.lpfCurrentD = LowPassFilter{0.005f};
         config.lpfVelocity = LowPassFilter{0.1f};
         config.lpfAngle = LowPassFilter{0.03f};
-        config.pidCurrentQ = PidController{3, 300.0f, 0.0f, 0, 12.0f};
-        config.pidCurrentD = PidController{3, 300.0f, 0.0f, 0, 12.0f};
         config.pidVelocity = PidController{0.5f, 10.0f, 0.0f, 1000.0f, 12.0f};
         config.pidAngle = PidController{20.0f, 0, 0, 0, 20.0f};
     }
@@ -50,16 +44,11 @@ public:
     struct Config_t
     {
         float voltageLimit{};
-        float currentLimit{};
         float velocityLimit{};
         float voltageUsedForSensorAlign{};
         ControlMode_t controlMode = ANGLE;
-        LowPassFilter lpfCurrentQ{};
-        LowPassFilter lpfCurrentD{};
         LowPassFilter lpfVelocity{};
         LowPassFilter lpfAngle{};
-        PidController pidCurrentQ;
-        PidController pidCurrentD;
         PidController pidVelocity;
         PidController pidAngle;
     };
@@ -76,7 +65,6 @@ public:
     bool Init(float _zeroElectricOffset = NOT_SET, EncoderBase::Direction _encoderDir = EncoderBase::CW);
     void AttachDriver(DriverBase* _driver);
     void AttachEncoder(EncoderBase* _encoder);
-    void AttachCurrentSense(CurrentSenseBase* _currentSense);
     void SetEnable(bool _enable);
     float GetEstimateAngle();
     float GetEstimateVelocity();
@@ -90,9 +78,7 @@ public:
     Config_t config{};
     State_t state{};
     DqVoltage_t voltage{};
-    DqCurrent_t current{};
     float zeroElectricAngleOffset = NOT_SET;
-    CurrentSenseBase* currentSense = nullptr;
     DriverBase* driver = nullptr;
     EncoderBase* encoder = nullptr;
 
@@ -108,7 +94,6 @@ private:
 
 
     bool enabled = false;
-    float phaseResistance = NOT_SET;
     int polePairs = 7;
     float voltageA{}, voltageB{}, voltageC{};
     float estimateAngle{};
