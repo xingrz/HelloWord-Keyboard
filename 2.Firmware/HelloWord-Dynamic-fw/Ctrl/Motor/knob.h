@@ -24,6 +24,7 @@ public:
     void SetEnable(bool _en);
     void ApplyZeroPos(float _angle = 0);
     void SetMode(Mode_t _mode);
+    Mode_t GetMode();
     void SetLimitPos(float _min, float _max);
     float GetPosition();
     float GetVelocity();

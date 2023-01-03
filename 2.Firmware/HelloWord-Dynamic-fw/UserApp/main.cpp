@@ -45,13 +45,17 @@ void ThreadOledUpdate(void* argument)
     oled.Init();
     eink.Init();
 
+    char str[10];
+
     for (;;)
     {
+        sprintf(str, "mode: %d", knob.GetMode());
+
         //OLED update
         oled.Clear();
         oled.SetDrawColor(1);
         oled.SetCursor(0, 0);
-        oled.DrawUTF8(0, 10, "hello");
+        oled.DrawUTF8(0, 10, str);
         oled.SendBuffer();
 
 

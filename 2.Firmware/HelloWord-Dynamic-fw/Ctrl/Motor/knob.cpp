@@ -112,6 +112,12 @@ void KnobSimulator::SetMode(KnobSimulator::Mode_t _mode)
 }
 
 
+KnobSimulator::Mode_t KnobSimulator::GetMode()
+{
+    return mode;
+}
+
+
 void KnobSimulator::Tick()
 {
     switch (mode)
