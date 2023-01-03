@@ -29,9 +29,7 @@ public:
     {
         TORQUE,
         VELOCITY,
-        ANGLE,
-        VELOCITY_OPEN_LOOP,
-        ANGLE_OPEN_LOOP
+        ANGLE
     };
 
     enum Error_t
@@ -88,8 +86,6 @@ private:
     bool AlignSensor();
     void CloseLoopControlTick();
     void FocOutputTick();
-    float VelocityOpenLoopTick(float _target);
-    float AngleOpenLoopTick(float _target);
     void SetPhaseVoltage(float _voltageQ, float _voltageD, float _angleElectrical);
 
 
@@ -102,7 +98,6 @@ private:
     float setPointCurrent{};
     float setPointVelocity{};
     float setPointAngle{};
-    uint64_t openLoopTimestamp{};
 };
 
 

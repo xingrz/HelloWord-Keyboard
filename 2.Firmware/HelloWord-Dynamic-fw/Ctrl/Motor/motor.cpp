@@ -176,13 +176,7 @@ bool Motor::AlignSensor()
 
 void Motor::CloseLoopControlTick()
 {
-    // No need to read shaftAngle in open-loop mode
-    if (config.controlMode != ControlMode_t::ANGLE_OPEN_LOOP &&
-        config.controlMode != ControlMode_t::VELOCITY_OPEN_LOOP)
-    {
-        estimateAngle = GetEstimateAngle();
-    }
-
+    estimateAngle = GetEstimateAngle();
     estimateVelocity = GetEstimateVelocity();
 
     if (!enabled) return;
@@ -203,16 +197,6 @@ void Motor::CloseLoopControlTick()
             setPointVelocity = target;
             setPointCurrent = config.pidVelocity(setPointVelocity - estimateVelocity);
             break;
-        case ControlMode_t::VELOCITY_OPEN_LOOP:
-            setPointVelocity = target;
-            voltage.q = VelocityOpenLoopTick(setPointVelocity);
-            voltage.d = 0;
-            break;
-        case ControlMode_t::ANGLE_OPEN_LOOP:
-            setPointAngle = target;
-            voltage.q = AngleOpenLoopTick(setPointAngle);
-            voltage.d = 0;
-            break;
     }
 }
 
@@ -220,10 +204,6 @@ void Motor::CloseLoopControlTick()
 void Motor::FocOutputTick()
 {
     if (encoder) encoder->Update();
-
-    if (config.controlMode == ControlMode_t::ANGLE_OPEN_LOOP ||
-        config.controlMode == ControlMode_t::VELOCITY_OPEN_LOOP)
-        return;
 
     if (!enabled) return;
 
@@ -233,51 +213,6 @@ void Motor::FocOutputTick()
     voltage.d = 0;
 
     SetPhaseVoltage(voltage.q, voltage.d, electricalAngle);
-}
-
-
-float Motor::VelocityOpenLoopTick(float _target)
-{
-    auto t = micros();
-    float deltaT = (float) (t - openLoopTimestamp) * 1e-6f;
-    // Quick fix for strange cases (micros overflow or timestamp not defined)
-    if (deltaT <= 0 || deltaT > 0.5f) deltaT = 1e-3f;
-
-    estimateAngle = Normalize(estimateAngle + _target * deltaT);
-    estimateVelocity = _target;
-
-    float voltageQ = config.voltageLimit;
-    SetPhaseVoltage(voltageQ, 0, Normalize(estimateAngle) * (float) polePairs);
-
-    openLoopTimestamp = t;
-
-    return voltageQ;
-}
-
-
-float Motor::AngleOpenLoopTick(float _target)
-{
-    unsigned long t = micros();
-    float deltaT = (float) (t - openLoopTimestamp) * 1e-6f;
-    // Quick fix for strange cases (micros overflow or timestamp not defined)
-    if (deltaT <= 0 || deltaT > 0.5f) deltaT = 1e-3f;
-
-    if (std::abs(_target - estimateAngle) > std::abs(config.velocityLimit * deltaT))
-    {
-        estimateAngle += SIGN(_target - estimateAngle) * std::abs(config.velocityLimit) * deltaT;
-        estimateVelocity = config.velocityLimit;
-    } else
-    {
-        estimateAngle = _target;
-        estimateVelocity = 0;
-    }
-
-    float voltageQ = config.voltageLimit;
-    SetPhaseVoltage(voltageQ, 0, Normalize(estimateAngle) * (float) polePairs);
-
-    openLoopTimestamp = t;
-
-    return voltageQ;
 }
 
 
