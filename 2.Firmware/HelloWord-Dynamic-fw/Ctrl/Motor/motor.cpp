@@ -39,6 +39,7 @@ void Motor::SetEnable(bool _enable)
 }
 
 
+// 获取估计累计角度
 float Motor::GetEstimateAngle()
 {
     // If no sensor linked return previous value (for open-loop case)
@@ -50,6 +51,7 @@ float Motor::GetEstimateAngle()
 }
 
 
+// 获取估计速度
 float Motor::GetEstimateVelocity()
 {
     // If no sensor linked return previous value (for open-loop case)
@@ -61,6 +63,7 @@ float Motor::GetEstimateVelocity()
 }
 
 
+// 获取周期角度
 float Motor::GetElectricalAngle()
 {
     // If no sensor linked return previous value (for open-loop case)
@@ -183,16 +186,19 @@ void Motor::CloseLoopControlTick()
 
     switch (config.controlMode)
     {
+        // 力矩模式
         case ControlMode_t::TORQUE:
             voltage.q = target;
             voltage.d = 0;
             setPointCurrent = voltage.q;
             break;
+        // 角度模式
         case ControlMode_t::ANGLE:
             setPointAngle = target;
             setPointVelocity = config.pidAngle(setPointAngle - estimateAngle);
             setPointCurrent = config.pidVelocity(setPointVelocity - estimateVelocity);
             break;
+        // 速度模式
         case ControlMode_t::VELOCITY:
             setPointVelocity = target;
             setPointCurrent = config.pidVelocity(setPointVelocity - estimateVelocity);
@@ -286,6 +292,7 @@ void Motor::SetPhaseVoltage(float _voltageQ, float _voltageD, float _angleElectr
 }
 
 
+// 设置力矩限制
 void Motor::SetTorqueLimit(float _val)
 {
     config.voltageLimit = _val;

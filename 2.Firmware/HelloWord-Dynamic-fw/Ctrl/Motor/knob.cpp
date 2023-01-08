@@ -43,6 +43,7 @@ void KnobSimulator::SetMode(KnobSimulator::Mode_t _mode)
         case MODE_DISABLE:
             motor->SetEnable(false);
             break;
+        // 惯性模式
         case MODE_INERTIA:
         {
             motor->SetEnable(true);
@@ -57,6 +58,7 @@ void KnobSimulator::SetMode(KnobSimulator::Mode_t _mode)
             motor->target = 0;
         }
             break;
+        // 编码器模式
         case MODE_ENCODER:
         {
             motor->SetEnable(true);
@@ -72,6 +74,7 @@ void KnobSimulator::SetMode(KnobSimulator::Mode_t _mode)
             lastAngle = 4.2;
         }
             break;
+        // 弹簧模式
         case MODE_SPRING:
         {
             motor->SetEnable(true);
@@ -86,6 +89,7 @@ void KnobSimulator::SetMode(KnobSimulator::Mode_t _mode)
             motor->target = 4.2;
         }
             break;
+        // 阻尼模式
         case MODE_DAMPED:
         {
             motor->SetEnable(true);
@@ -97,6 +101,7 @@ void KnobSimulator::SetMode(KnobSimulator::Mode_t _mode)
             motor->target = 0;
         }
             break;
+        // 旋转模式
         case MODE_SPIN:
         {
             motor->SetEnable(true);
@@ -122,6 +127,7 @@ void KnobSimulator::Tick()
 {
     switch (mode)
     {
+        // 惯性模式
         case MODE_INERTIA:
         {
             auto v = GetVelocity();
@@ -136,6 +142,7 @@ void KnobSimulator::Tick()
             lastVelocity = v;
         }
             break;
+        // 编码器模式
         case MODE_ENCODER:
         {
             auto a = GetPosition();
@@ -152,6 +159,7 @@ void KnobSimulator::Tick()
             }
         }
             break;
+        // 阻尼模式
         case MODE_DAMPED:
             if (limitPositionMax != 0 && limitPositionMin != 0)
             {
@@ -172,7 +180,9 @@ void KnobSimulator::Tick()
             }
             break;
         case MODE_DISABLE:
+        // 弹簧模式
         case MODE_SPRING:
+        // 旋转模式
         case MODE_SPIN:
             break;
     }

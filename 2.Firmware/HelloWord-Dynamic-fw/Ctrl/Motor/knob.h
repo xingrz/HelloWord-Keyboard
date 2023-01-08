@@ -12,11 +12,11 @@ public:
     enum Mode_t
     {
         MODE_DISABLE = 0,
-        MODE_INERTIA,
-        MODE_ENCODER,
-        MODE_SPRING,
-        MODE_DAMPED,
-        MODE_SPIN
+        MODE_INERTIA, // 惯性模式
+        MODE_ENCODER, // 编码器模式
+        MODE_SPRING,  // 弹簧模式
+        MODE_DAMPED,  // 阻尼模式
+        MODE_SPIN     // 旋转模式
     };
 
     void Init(Motor* _motor);
